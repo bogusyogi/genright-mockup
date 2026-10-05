@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GenRight Redesign</title>
+<style>
+:root{
+  --win:#f6f6f6; --side:#e8e8ea; --bg:#f5f5f7; --panel:#ffffff; --sunk:#f0f0f2; --fill:rgba(118,118,128,.12); --fill-2:rgba(0,0,0,.06);
+  --line:rgba(0,0,0,.1); --line-strong:rgba(0,0,0,.18);
+  --ink:#1d1d1f; --ink-2:#6e6e73; --ink-3:#8e8e93;
+  --accent:#007aff; --accent-soft:rgba(0,122,255,.1); --accent-ink:#ffffff; --focus:rgba(0,122,255,.35);
+  --ok:#248a3d; --ok-dot:#34c759; --ok-soft:rgba(52,199,89,.14);
+  --warn:#c93400; --warn-dot:#ff9500; --warn-soft:rgba(255,149,0,.14);
+  --bad:#d70015; --bad-soft:rgba(255,59,48,.12);
+  --radius:12px; --card:0 0 0 .5px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.05);
+  --knob:0 1px 2px rgba(0,0,0,.14),0 0 0 .5px rgba(0,0,0,.06);
+}
+:root[data-theme="dark"]{
+  --win:#2a2a2c; --side:#262628; --bg:#1e1e1e; --panel:#2c2c2e; --sunk:#242426; --fill:rgba(118,118,128,.24); --fill-2:rgba(255,255,255,.08);
+  --line:rgba(255,255,255,.1); --line-strong:rgba(255,255,255,.2);
+  --ink:#f5f5f7; --ink-2:#aeaeb2; --ink-3:#8e8e93;
+  --accent:#0a84ff; --accent-soft:rgba(10,132,255,.18); --accent-ink:#ffffff; --focus:rgba(10,132,255,.5);
+  --ok:#30d158; --ok-dot:#30d158; --ok-soft:rgba(48,209,88,.16);
+  --warn:#ff9f0a; --warn-dot:#ff9f0a; --warn-soft:rgba(255,159,10,.16);
+  --bad:#ff453a; --bad-soft:rgba(255,69,58,.16);
+  --card:0 0 0 .5px rgba(255,255,255,.08); --knob:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:13px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.003em}
+button{font:inherit;color:inherit;cursor:default}
+code{font:12px ui-monospace,"SF Mono",Menlo,monospace}
+.app{display:grid;grid-template-columns:220px 1fr;height:100vh}
+
+/* Sidebar — opaque source list (Reduce Transparency look) */
+.side{background:var(--side);border-right:.5px solid var(--line-strong);display:flex;flex-direction:column;min-height:0}
+.lights{display:flex;gap:8px;height:52px;align-items:center;padding:0 16px;flex:none}
+.lights i{width:12px;height:12px;border-radius:50%;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.12)}
+.search{margin:0 10px 6px;display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;border-radius:7px;background:var(--fill-2);color:var(--ink-3);font-size:13px}
+.search kbd{margin-left:auto;font:11px -apple-system,system-ui;color:var(--ink-3)}
+.nav{overflow:auto;padding:2px 10px 12px;flex:1}
+.group{margin-top:14px}
+.group h6{margin:0 8px 3px;font-size:11px;font-weight:600;color:var(--ink-3)}
+.item{display:flex;align-items:center;gap:8px;width:100%;height:28px;padding:0 8px;border:0;background:none;border-radius:6px;color:var(--ink);font-weight:400;text-align:left;font-size:13px}
+.item svg{width:16px;height:16px;flex:none;color:var(--accent)}
+.item.on{background:var(--fill-2)}
+:root[data-theme="dark"] .item.on{background:rgba(255,255,255,.1)}
+.item .tag{margin-left:auto;font-size:11px;color:var(--ink-3);display:inline-flex;align-items:center}
+.side-foot{padding:10px 18px 14px;border-top:.5px solid var(--line)}
+.health{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--ink-2)}
+.health div{display:flex;justify-content:space-between}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px}
+
+/* Main + unified toolbar */
+.main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.top{display:flex;align-items:center;gap:10px;height:52px;padding:0 16px 0 20px;border-bottom:.5px solid var(--line-strong);background:var(--win);flex:none}
+.crumb{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.crumb span{display:none}
+.top .sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:99px;background:var(--fill);font-size:11.5px;color:var(--ink-2);white-space:nowrap}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.icon-btn{width:30px;height:26px;display:grid;place-items:center;border-radius:6px;border:0;background:none;color:var(--ink-2)}
+.icon-btn:hover{background:var(--fill-2)}
+.icon-btn svg{width:17px;height:17px}
+
+.content{flex:1;min-height:0;display:grid;grid-template-columns:1fr 320px}
+.work{overflow:auto;padding:22px 28px 40px}
+.eyebrow{font-size:12px;font-weight:600;color:var(--ink-3)}
+h1{margin:2px 0 4px;font-size:26px;font-weight:700;letter-spacing:-.022em}
+.lede{margin:0;color:var(--ink-2);max-width:60ch;font-size:13px}
+.locks{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 24px}
+.lock{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:99px;background:var(--fill);font-size:12px;color:var(--ink-2)}
+.lock b{color:var(--ink);font-weight:500}
+.lock svg{width:11px;height:11px;opacity:.55}
+
+.step{display:flex;gap:12px;margin-bottom:26px}
+.num{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;background:var(--fill);color:var(--ink-2)}
+.step.done .num{background:var(--accent);color:#fff}
+.step-body{flex:1;min-width:0}
+.step h3{margin:1px 0 2px;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.step p.hint{margin:0 0 12px;color:var(--ink-3);font-size:12px}
+
+/* Segmented control */
+.seg{display:inline-flex;padding:2px;border-radius:8px;background:var(--fill);gap:0;flex-wrap:wrap}
+.seg button{border:0;background:none;height:24px;padding:0 12px;border-radius:6px;font-size:12.5px;color:var(--ink);font-weight:400;position:relative}
+.seg button.on{background:var(--panel);box-shadow:var(--knob);font-weight:500}
+:root[data-theme="dark"] .seg button.on{background:#636366}
+
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.toolbar .search{margin:0;width:220px;background:var(--fill)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.tile{position:relative;border:0;border-radius:10px;background:none;padding:0;text-align:left}
+.tile .img{aspect-ratio:1;background:#fff;display:block;border-radius:10px;overflow:hidden;box-shadow:var(--card)}
+.tile .img svg{width:100%;height:100%;display:block}
+.tile.on .img{box-shadow:0 0 0 3px var(--accent)}
+.tile .meta{padding:6px 2px 0;font-size:12px;display:block}
+.tile .meta b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .meta span{color:var(--ink-3);font-size:11px}
+.check{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;display:none;place-items:center;box-shadow:0 0 0 2px #fff}
+.tile.on .check{display:grid}
+.check svg{width:12px;height:12px}
+
+/* Inspector */
+.run{border-left:.5px solid var(--line-strong);background:var(--win);display:flex;flex-direction:column;min-height:0}
+.run-head{padding:16px 18px 10px}
+.run-body{flex:1;overflow:auto;padding:4px 18px 16px}
+.preview{aspect-ratio:1;border-radius:10px;background:var(--fill-2);display:grid;place-items:center;color:var(--ink-3);font-size:12px;text-align:center;overflow:hidden}
+.preview svg{width:100%;height:100%}
+.kv{margin:14px 0 0;display:grid;grid-template-columns:auto 1fr;font-size:12.5px;background:var(--panel);border-radius:10px;box-shadow:var(--card);overflow:hidden}
+.kv dt,.kv dd{padding:8px 12px;border-top:.5px solid var(--line)}
+.kv dt:first-of-type,.kv dd:first-of-type{border-top:0}
+.kv dt{color:var(--ink)}
+.kv dd{margin:0;text-align:right;color:var(--ink-2)}
+.cost{margin-top:14px;padding:12px;border-radius:10px;background:var(--panel);box-shadow:var(--card);display:flex;justify-content:space-between;align-items:center}
+.cost b{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.cost small{display:block;color:var(--ink-3);font-size:11.5px}
+.run-foot{padding:12px 18px 16px;border-top:.5px solid var(--line)}
+.primary{width:100%;height:32px;border:0;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-weight:500;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.primary:disabled{opacity:.4}
+.primary svg{width:13px;height:13px}
+.foot-note{margin-top:7px;font-size:11px;color:var(--ink-3);text-align:center}
+.recent{margin-top:18px}
+.recent h6{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--ink-3)}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.strip div{aspect-ratio:1;border-radius:6px;overflow:hidden}
+.strip svg{width:100%;height:100%;display:block}
+
+.notes{position:fixed;left:236px;bottom:16px;width:310px;background:var(--panel);color:var(--ink);border-radius:12px;padding:14px 16px;font-size:12px;box-shadow:0 0 0 .5px var(--line-strong),0 12px 32px rgba(0,0,0,.18);z-index:5}
+.notes b{display:block;margin-bottom:6px;font-size:13px}
+.notes ol{margin:0;padding-left:18px;color:var(--ink-2)}
+.notes li{margin:3px 0}
+.notes button{position:absolute;top:8px;right:10px;border:0;background:none;color:var(--ink-3)}
+
+/* Shared workspace pieces */
+.view[hidden],.mode[hidden],.pill[hidden]{display:none}
+.img-work{display:flex;flex-direction:column;padding-bottom:20px}
+.img-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.img-head h1{margin-bottom:0}
+.prov-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.prov-label a{font-size:12px;color:var(--accent);text-decoration:none}
+.providers{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px;margin-bottom:22px}
+.prov{position:relative;border:0;background:var(--panel);border-radius:10px;padding:10px 12px;text-align:left;display:flex;flex-direction:column;gap:1px;box-shadow:var(--card)}
+.prov.on{box-shadow:0 0 0 2px var(--accent)}
+.prov b{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.prov small{color:var(--ink-3);font-size:11.5px}
+.prov .badge{position:absolute;top:9px;right:10px;font-size:10.5px;font-weight:500;padding:1px 7px;border-radius:99px}
+.badge.local{background:var(--ok-soft);color:var(--ok)}
+.badge.paid{background:var(--fill);color:var(--ink-2)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.prov.dim b,.prov.dim small{opacity:.55}
+.chat{flex:1;min-height:520px;display:grid;grid-template-columns:200px 1fr;border-radius:var(--radius);background:var(--panel);box-shadow:var(--card);overflow:hidden}
+.convos{border-right:.5px solid var(--line);padding:10px 8px;display:flex;flex-direction:column;gap:1px}
+.convos h6{margin:2px 8px 6px;font-size:12px;font-weight:600;color:var(--ink-3)}
+.convo{border:0;background:none;text-align:left;padding:7px 8px;border-radius:7px}
+.convo b{display:block;font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.convo small{color:var(--ink-3);font-size:11px}
+.convo.on{background:var(--accent);color:#fff}
+.convo.on small{color:rgba(255,255,255,.8)}
+.thread{display:flex;flex-direction:column;min-width:0}
+.msgs{flex:1;overflow:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.you{align-self:flex-end;max-width:70%;background:var(--accent);color:#fff;padding:7px 12px;border-radius:18px;font-size:13px}
+.job{max-width:440px}
+.job-meta{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-3);margin-bottom:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:99px;background:var(--fill);font-size:11px;color:var(--ink-2)}
+.chip.local{background:var(--ok-soft);color:var(--ok)}
+.outs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.out{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--fill-2)}
+.out svg{width:100%;height:100%;display:block}
+.out .acts{position:absolute;left:8px;bottom:8px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.out:hover .acts{opacity:1}
+.acts span{font-size:11px;background:rgba(0,0,0,.6);color:#fff;padding:3px 8px;border-radius:99px}
+.running{display:grid;place-items:center;color:var(--ink-3);font-size:12px}
+.bar{width:70%;height:4px;border-radius:2px;background:var(--fill);margin:8px auto 0;overflow:hidden}
+.bar i{display:block;height:100%;width:62%;background:var(--accent);border-radius:2px}
+.link-btn{border:0;background:none;color:var(--accent);font-size:11.5px;padding:0;font-weight:500}
+.composer{border-top:.5px solid var(--line);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.composer textarea{width:100%;min-height:52px;resize:none;border:0;border-radius:10px;padding:9px 12px;font:inherit;background:var(--fill-2);color:var(--ink)}
+textarea:focus,input:focus,select:focus{outline:0;box-shadow:0 0 0 3px var(--focus)}
+.comp-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ghost{height:24px;padding:0 10px;border:0;border-radius:6px;background:var(--panel);font-size:12px;color:var(--ink);box-shadow:var(--knob)}
+:root[data-theme="dark"] .ghost{background:#48484a}
+.send{margin-left:auto;height:26px;padding:0 14px;border:0;border-radius:99px;background:var(--accent);color:#fff;font-weight:500;font-size:12.5px}
+.form{border-radius:var(--radius);background:var(--panel);box-shadow:var(--card);padding:16px 18px;display:grid;gap:14px}
+.form label{display:block;font-size:12px;font-weight:500;color:var(--ink-2);margin-bottom:5px}
+.form textarea,.form select,.form input{width:100%;border:0;box-shadow:0 0 0 .5px var(--line-strong);border-radius:6px;padding:6px 9px;background:var(--panel);color:var(--ink);font:inherit}
+.form textarea{min-height:84px;resize:vertical}
+.form select{appearance:none;background:var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='12' viewBox='0 0 10 12'%3E%3Cpath d='M2 4.5 5 1.5l3 3M2 7.5l3 3 3-3' fill='none' stroke='%238e8e93' stroke-width='1.4'/%3E%3C/svg%3E") no-repeat right 8px center}
+.fgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.templates{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.tpl{border:0;border-radius:var(--radius);background:none;padding:0;text-align:left}
+.tpl .img{display:block;aspect-ratio:16/9;border-radius:10px;overflow:hidden;box-shadow:var(--card)}
+.tpl .img svg{width:100%;height:100%;display:block}
+.tpl div{padding:7px 2px}
+.tpl b{display:block;font-size:13px;font-weight:500}
+.tpl small{color:var(--ink-3);font-size:11.5px}
+.rt{margin-top:12px;background:var(--panel);box-shadow:var(--card);border-radius:10px;padding:10px 12px;font-size:12.5px}
+.rt h6{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--ink-3);display:flex;justify-content:space-between}
+.rt .row{display:flex;justify-content:space-between;padding:3px 0;color:var(--ink-2)}
+.rt .row b{color:var(--ink);font-weight:400}
+.meter{height:5px;border-radius:3px;background:var(--fill);margin:6px 0 2px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ok-dot)}
+
+/* Video */
+.frames{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.slot{aspect-ratio:16/9;border-radius:10px;overflow:hidden;position:relative;background:var(--fill-2);display:grid;place-items:center;color:var(--ink-3);font-size:12px;box-shadow:inset 0 0 0 1px var(--line)}
+.slot svg{position:absolute;inset:0;width:100%;height:100%}
+.slot .lbl{position:absolute;left:8px;top:8px;font-size:11px;background:rgba(0,0,0,.55);color:#fff;padding:2px 8px;border-radius:99px;z-index:1}
+.avatars{display:flex;gap:14px;flex-wrap:wrap}
+.av{border:0;background:none;padding:0;text-align:center;font-size:12px;color:var(--ink-2)}
+.av i{display:block;width:72px;height:72px;border-radius:50%;margin-bottom:6px;box-shadow:var(--card)}
+.av.on i{box-shadow:0 0 0 3px var(--accent)}
+.av.on{color:var(--ink);font-weight:500}
+
+/* Motion */
+.stage{aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;position:relative;background:#0b0b0f;box-shadow:var(--card)}
+.stage .bgv{position:absolute;inset:0;background:radial-gradient(120% 90% at 20% 10%,#1d4ed8 0,transparent 55%),radial-gradient(90% 80% at 90% 90%,#7c3aed 0,transparent 60%),#0b0b0f}
+.stage .title{position:absolute;left:8%;top:34%;color:#fff;font-weight:700;font-size:clamp(20px,4vw,44px);letter-spacing:-.03em;animation:rise 3s cubic-bezier(.2,.8,.2,1) infinite}
+.stage .subt{position:absolute;left:8%;top:52%;color:rgba(255,255,255,.75);font-size:clamp(11px,1.5vw,16px);animation:rise 3s .25s cubic-bezier(.2,.8,.2,1) infinite}
+.stage .l3{position:absolute;left:8%;bottom:10%;display:flex;align-items:center;gap:10px;background:#fff;color:#111;padding:8px 14px 8px 8px;border-radius:10px;font-size:12px;animation:slide 3s .5s cubic-bezier(.2,.8,.2,1) infinite}
+.stage .l3 i{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#007aff,#af52de)}
+.stage .tc{position:absolute;right:12px;top:10px;font:11px ui-monospace,"SF Mono",monospace;color:rgba(255,255,255,.6)}
+@keyframes rise{0%{opacity:0;transform:translateY(14px)}18%,80%{opacity:1;transform:none}100%{opacity:0}}
+@keyframes slide{0%{opacity:0;transform:translateX(-20px)}20%,80%{opacity:1;transform:none}100%{opacity:0}}
+.transport{display:flex;align-items:center;gap:10px;margin:12px 0 8px}
+.transport .play{width:30px;height:30px;border-radius:50%;border:0;background:var(--fill);display:grid;place-items:center}
+.transport .play svg{width:12px;height:12px}
+.transport span{font:12px ui-monospace,"SF Mono",monospace;color:var(--ink-2)}
+.timeline{background:var(--panel);border-radius:var(--radius);box-shadow:var(--card);padding:8px 0;position:relative}
+.ruler{display:flex;justify-content:space-between;padding:0 12px 6px 112px;font:10px ui-monospace,monospace;color:var(--ink-3)}
+.track{display:flex;align-items:center;height:30px;padding:0 12px}
+.track>b{width:100px;flex:none;font-size:12px;font-weight:500;color:var(--ink-2)}
+.lane{position:relative;flex:1;height:22px;border-radius:5px;background:var(--fill-2)}
+.clip{position:absolute;top:0;bottom:0;border-radius:5px;font-size:11px;color:#fff;padding:0 8px;display:flex;align-items:center;white-space:nowrap;overflow:hidden}
+.playhead{position:absolute;top:0;bottom:0;left:calc(112px + (100% - 124px)*.38);width:2px;background:#ff3b30;border-radius:1px}
+.playhead::before{content:"";position:absolute;top:-2px;left:-4px;width:10px;height:10px;border-radius:50%;background:#ff3b30}
+.engine{display:flex;flex-direction:column;gap:8px}
+.switch{position:relative;width:38px;height:22px;border-radius:99px;background:var(--fill);border:0;padding:0;flex:none;transition:background .15s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:var(--knob);transition:transform .15s}
+.switch.on{background:var(--ok-dot)}
+.switch.on::after{transform:translateX(16px)}
+.setting{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-top:.5px solid var(--line);font-size:12.5px}
+.setting:first-child{border-top:0}
+.group-box{background:var(--panel);border-radius:10px;box-shadow:var(--card);margin-top:12px;overflow:hidden}
+.group-box .seg button{height:22px;padding:0 9px;font-size:12px}
+.group-box input{border:0;background:none;text-align:right;color:var(--ink-2);font:inherit;width:60%}
+
+@media (max-width:900px){.chat{grid-template-columns:1fr}.convos{display:none}.fgrid{grid-template-columns:1fr 1fr}}
+@media (max-width:1100px){.content{grid-template-columns:1fr}.run{border-left:0;border-top:.5px solid var(--line-strong)}}
+@media (max-width:760px){.app{grid-template-columns:1fr}.side{display:none}.work{padding:16px}.notes{display:none}.top{padding:0 16px}}
+/* Onboarding */
+.ob-back{position:fixed;inset:0;background:rgba(0,0,0,.28);display:grid;place-items:center;z-index:20;padding:16px}
+.ob-back[hidden]{display:none}
+.ob{width:min(880px,100%);height:min(640px,100%);background:var(--panel);border-radius:14px;box-shadow:0 0 0 .5px var(--line-strong),0 24px 60px rgba(0,0,0,.28);display:grid;grid-template-columns:210px 1fr;overflow:hidden}
+.ob-side{background:var(--side);padding:18px 12px;display:flex;flex-direction:column;gap:2px;border-right:.5px solid var(--line-strong)}
+.ob-side .lights{height:auto;padding:0 6px 16px}
+.ob-step{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:7px;font-size:13px;color:var(--ink-2);border:0;background:none;text-align:left}
+.ob-step i{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:600;background:var(--fill);color:var(--ink-2);flex:none}
+.ob-step.on{background:var(--fill-2);color:var(--ink);font-weight:500}
+.ob-step.on i{background:var(--accent);color:#fff}
+.ob-step.done i{background:var(--ok-dot);color:#fff}
+.ob-main{display:flex;flex-direction:column;min-width:0}
+.ob-body{flex:1;overflow:auto;padding:26px 30px}
+.ob-body h2{margin:0 0 4px;font-size:22px;letter-spacing:-.02em}
+.ob-body p.sub{margin:0 0 18px;color:var(--ink-2)}
+.ob-foot{display:flex;align-items:center;gap:8px;padding:12px 18px;border-top:.5px solid var(--line)}
+.ob-foot .sp{flex:1}
+.btn{height:28px;padding:0 14px;border-radius:7px;border:0;font-size:13px;background:var(--panel);box-shadow:var(--knob);color:var(--ink)}
+.btn.pri{background:var(--accent);color:#fff;box-shadow:none}
+.hw{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.hw .group-box{margin:0}
+.found{display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:.5px solid var(--line);font-size:12.5px}
+.found:first-child{border-top:0}
+.found b{font-weight:500}
+.found small{display:block;color:var(--ink-3);font-size:11.5px}
+.found .r{margin-left:auto;text-align:right}
+.key{display:grid;grid-template-columns:150px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-top:.5px solid var(--line);font-size:12.5px}
+.key:first-child{border-top:0}
+.key small{display:block;color:var(--ink-3);font-size:11px}
+.key input{border:0;box-shadow:0 0 0 .5px var(--line-strong);border-radius:6px;padding:5px 8px;font:12px ui-monospace,monospace;background:var(--panel);color:var(--ink);min-width:0}
+.key .st{font-size:11.5px;min-width:110px;text-align:right}
+.mrow{display:grid;grid-template-columns:22px 1fr 90px 150px;gap:10px;align-items:center;padding:9px 12px;border-top:.5px solid var(--line);font-size:12.5px}
+.mrow:first-child{border-top:0}
+.mrow small{display:block;color:var(--ink-3);font-size:11px}
+.mrow .sz{color:var(--ink-2);text-align:right}
+.fit{font-size:11px;padding:2px 8px;border-radius:99px;justify-self:end;white-space:nowrap}
+.fit.well{background:var(--ok-soft);color:var(--ok)}
+.fit.cand{background:var(--accent-soft);color:var(--accent)}
+.fit.slow{background:var(--warn-soft);color:var(--warn)}
+.fit.api{background:var(--fill);color:var(--ink-2)}
+.fit.have{background:var(--ok-soft);color:var(--ok)}
+.capttl{font-size:12px;font-weight:600;color:var(--ink-3);margin:16px 0 6px}
+.capttl:first-child{margin-top:0}
+.dl{display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:.5px solid var(--line);font-size:12.5px}
+.dl:first-child{border-top:0}
+.dl .bar{flex:0 0 160px;margin:0}
+.machine{display:flex;gap:8px;align-items:center;margin-bottom:14px;font-size:12px;color:var(--ink-3)}
+@media (max-width:760px){.ob{grid-template-columns:1fr}.ob-side{display:none}.hw{grid-template-columns:1fr}.key{grid-template-columns:1fr}.mrow{grid-template-columns:22px 1fr 90px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+    <div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Jump to…<kbd>⌘K</kbd></div>
+    <nav class="nav" id="nav">
+      <div class="group"><h6>Workflows</h6>
+        <button class="item on" data-t="Color Thumbnail" data-v="kdp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6.5A2.5 2.5 0 0 0 4 21.5"/></svg> KDP<span class="tag">3</span></button>
+        <button class="item" data-t="Production"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg> Production</button>
+      </div>
+      <div class="group"><h6>Create</h6>
+        <button class="item" data-t="Image" data-v="image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg> Image<span class="tag"><i class="dot" style="background:var(--ok-dot);margin:0 4px 0 0"></i>local</span></button>
+        <button class="item" data-t="Video" data-v="video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="m17 10 5-3v10l-5-3"/></svg> Video</button>
+        <button class="item" data-t="Motion" data-v="motion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17c3-8 6 4 9-4s5-6 7-4"/><circle cx="4" cy="17" r="1.5"/><circle cx="20" cy="9" r="1.5"/></svg> Motion<span class="tag"><i class="dot" style="background:var(--ok-dot);margin:0 4px 0 0"></i>local</span></button>
+        <button class="item" data-t="Voice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5"/></svg> Voice</button>
+      </div>
+      <div class="group"><h6>Library</h6>
+        <button class="item" data-t="Gallery"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> Gallery<span class="tag">1,284</span></button>
+      </div>
+    </nav>
+    <div class="side-foot">
+      <button class="item" id="openSetup" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 4.6 15H4.5a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 5.7 8.3l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 11 4.4V4.5a2 2 0 1 1 4 0v-.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8"/></svg>Models &amp; Keys</button>
+      <div class="health">
+        <div><span><i class="dot" style="background:var(--ok)"></i>Engine</span><span>healthy</span></div>
+        <div><span><i class="dot" style="background:var(--warn)"></i>Metadata</span><span>12 incomplete</span></div>
+        <div><span><i class="dot" style="background:var(--ok)"></i>Index</span><span>0 fatal · 184 ms</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <div class="crumb"><span></span><b id="crumb">Color Thumbnail</b></div>
+      <div class="sp"></div>
+      <span class="pill warn" id="topPills">NB2 credits unavailable</span>
+      <span class="pill">Queue · idle</span>
+      <button class="icon-btn" id="theme" title="Toggle theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg></button>
+    </header>
+
+    <div class="content view" id="view-kdp">
+      <section class="work">
+        <div class="eyebrow">KDP workflow</div>
+        <h1>Color thumbnail</h1>
+        <p class="lede">Turn one line-art page into a colored cover thumbnail. Everything except the coloring material is locked.</p>
+        <div class="locks">
+          <span class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Model <b>NB2</b></span>
+          <span class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Aspect <b>1:1</b></span>
+          <span class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Resolution <b>2K</b></span>
+          <span class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Prompt <b>KDP colorize v3</b></span>
+        </div>
+
+        <div class="step" id="step1">
+          <div class="num">1</div>
+          <div class="step-body">
+            <h3>Pick a source page</h3>
+            <p class="hint">Line-art images indexed from <code>D:/Claude/KDP</code></p>
+            <div class="toolbar">
+              <div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Filter pages…</div>
+              <div class="seg" id="book"><button class="on">All books</button><button>Krishna</button><button>Puck</button></div>
+            </div>
+            <div class="grid" id="grid"></div>
+          </div>
+        </div>
+
+        <div class="step" id="step2">
+          <div class="num">2</div>
+          <div class="step-body">
+            <h3>Coloring material</h3>
+            <p class="hint">The only creative choice in this workflow.</p>
+            <div class="seg" id="mat"><button class="on">Colored pencil</button><button>Watercolor</button><button>Marker</button><button>Crayon</button><button>Gouache</button></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="run">
+        <div class="run-head">
+          <div class="eyebrow">Run</div>
+          <h3 style="margin:2px 0 0;font-size:15px" id="runTitle">No page selected</h3>
+        </div>
+        <div class="run-body">
+          <div class="preview" id="preview">Select a page to preview<br>the source here</div>
+          <dl class="kv">
+            <dt>Material</dt><dd id="kvMat">Colored pencil</dd>
+            <dt>Output</dt><dd>2048 × 2048 PNG</dd>
+            <dt>Approval</dt><dd>Eyes + auto-jury</dd>
+            <dt>Destination</dt><dd>Content/kdp/thumbs</dd>
+          </dl>
+          <div class="cost"><div><small>Estimated cost</small><b>4 credits</b></div><span class="pill warn">balance unknown</span></div>
+          <div class="recent">
+            <h6>Recent thumbnails</h6>
+            <div class="strip" id="strip"></div>
+          </div>
+        </div>
+        <div class="run-foot">
+          <button class="primary" id="go" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>Colorize thumbnail</button>
+          <div class="foot-note">⌘↵ to run · runs queue in the background</div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="content view" id="view-image" hidden>
+      <section class="work img-work">
+        <div class="img-head">
+          <div><div class="eyebrow">Create</div><h1>Image</h1></div>
+          <div class="seg" id="imgMode"><button data-m="workflows">Workflows</button><button class="on" data-m="chat">Chat</button><button data-m="advanced">Advanced</button></div>
+        </div>
+
+        <div class="prov-label"><span class="eyebrow">Provider</span><a href="#" onclick="return false">Manage local models →</a></div>
+        <div class="providers" id="providers"></div>
+
+        <div class="mode" id="m-chat">
+          <div class="chat">
+            <div class="convos">
+              <h6>Conversations</h6>
+              <button class="convo on"><b>Greenhouse under northern lights</b><small>3 jobs · Qwen local</small></button>
+              <button class="convo"><b>Puck cover — forest variant</b><small>5 jobs · NB2</small></button>
+              <button class="convo"><b>HR hero, desert dusk</b><small>2 jobs · fal</small></button>
+              <button class="convo"><b>Krishna p.19 reference</b><small>1 job · Qwen local</small></button>
+            </div>
+            <div class="thread">
+              <div class="msgs">
+                <div class="you">A tiny glass greenhouse under the northern lights, snow on the ground, warm light inside</div>
+                <div class="job">
+                  <div class="job-meta"><span class="chip local">Qwen 2.1 · local</span><span class="chip">1024×1024</span><span>28 s · free</span></div>
+                  <div class="outs" id="outA"></div>
+                </div>
+                <div class="you">Same scene, wider, add a fox in the foreground</div>
+                <div class="job">
+                  <div class="job-meta"><span class="chip">NB2 · cloud</span><span class="chip">16:9</span><span>4 credits · cancelled at 40%</span><button class="link-btn">Resume</button></div>
+                  <div class="outs"><div class="out running">Cancelled<span class="link-btn" style="margin-top:4px">Retry on local</span></div></div>
+                </div>
+                <div class="job">
+                  <div class="job-meta"><span class="chip local">Qwen 2.1 · local</span><span class="chip">16:9</span><span>step 17 / 28</span><button class="link-btn">Cancel</button></div>
+                  <div class="outs"><div class="out running"><div style="text-align:center">Generating…<div class="bar"><i></i></div></div></div></div>
+                </div>
+              </div>
+              <div class="composer">
+                <textarea placeholder="Describe the image. Enter to generate, Shift+Enter for a new line. Drop an image to use as a reference."></textarea>
+                <div class="comp-row">
+                  <button class="ghost">＋ Reference</button>
+                  <button class="ghost">16:9 ▾</button>
+                  <button class="ghost">Advanced ▾</button>
+                  <span class="chip local" id="compProv">Qwen 2.1 · local · free</span>
+                  <button class="send">Generate</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode" id="m-advanced" hidden>
+          <div class="form">
+            <div><label>Prompt</label><textarea>A tiny glass greenhouse under the northern lights, snow on the ground, warm light inside</textarea></div>
+            <div class="fgrid">
+              <div><label>Aspect</label><select><option>16:9</option><option>1:1</option></select></div>
+              <div><label>Resolution</label><select><option>2K</option><option>1K</option></select></div>
+              <div><label>Count</label><select><option>2</option><option>1</option><option>4</option></select></div>
+              <div><label>Seed</label><input value="random"></div>
+            </div>
+            <div><label>Negative prompt</label><input placeholder="optional"></div>
+          </div>
+        </div>
+
+        <div class="mode" id="m-workflows" hidden>
+          <div class="templates" id="templates"></div>
+        </div>
+      </section>
+
+      <aside class="run">
+        <div class="run-head">
+          <div class="eyebrow">Provider</div>
+          <h3 style="margin:2px 0 0;font-size:15px" id="pvName">Qwen Image 2.1</h3>
+        </div>
+        <div class="run-body" id="pvBody"></div>
+        <div class="run-foot">
+          <button class="primary" id="pvGo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>Generate</button>
+          <div class="foot-note" id="pvNote">Runs on this machine · no credits</div>
+        </div>
+      </aside>
+    </div>
+    <div class="content view" id="view-video" hidden>
+      <section class="work img-work">
+        <div class="img-head">
+          <div><div class="eyebrow">Create</div><h1>Video</h1></div>
+          <div class="seg" id="vidMode"><button data-m="v-workflows">Workflows</button><button class="on" data-m="v-generate">Generate</button><button data-m="v-avatar">Avatar</button></div>
+        </div>
+        <div class="mode" id="m-v-generate">
+          <div class="prov-label"><span class="eyebrow">Model</span><a href="#" onclick="return false">Compare models →</a></div>
+          <div class="providers" id="vproviders"></div>
+          <div class="form">
+            <div><label>Frames</label>
+              <div class="frames">
+                <div class="slot" id="slotA"><span class="lbl">Start frame</span></div>
+                <div class="slot"><span class="lbl">End frame</span>Drop an image or pick from Gallery</div>
+              </div>
+            </div>
+            <div><label>Motion prompt</label><textarea>Slow push-in through the snow toward the greenhouse, aurora ripples overhead, a fox walks into frame from the left</textarea></div>
+            <div class="fgrid">
+              <div><label>Duration</label><select><option>5 s</option><option>8 s</option><option>10 s</option></select></div>
+              <div><label>Aspect</label><select><option>16:9</option><option>9:16</option><option>1:1</option></select></div>
+              <div><label>Camera</label><select><option>Push in</option><option>Orbit left</option><option>Static</option></select></div>
+              <div><label>Resolution</label><select><option>720p</option><option>1080p</option></select></div>
+            </div>
+          </div>
+        </div>
+        <div class="mode" id="m-v-avatar" hidden>
+          <div class="form">
+            <div><label>Avatar</label>
+              <div class="avatars" id="avatars"></div>
+            </div>
+            <div><label>Script</label><textarea>Hi, I'm Maya. In the next sixty seconds I'll show you how GenRight turns one sketch into a finished colouring-book cover.</textarea></div>
+            <div class="fgrid">
+              <div><label>Voice</label><select><option>Maya · warm</option><option>From Voice library…</option></select></div>
+              <div><label>Background</label><select><option>Studio grey</option><option>Transparent</option><option>From Gallery…</option></select></div>
+              <div><label>Aspect</label><select><option>9:16</option><option>16:9</option></select></div>
+              <div><label>Captions</label><select><option>Burned in</option><option>Off</option></select></div>
+            </div>
+          </div>
+        </div>
+        <div class="mode" id="m-v-workflows" hidden>
+          <div class="templates" id="vtemplates"></div>
+        </div>
+      </section>
+      <aside class="run">
+        <div class="run-head"><div class="eyebrow">Run</div><h3 style="margin:2px 0 0;font-size:15px;font-weight:600" id="vpvName">Seedance 2 Fast</h3></div>
+        <div class="run-body" id="vpvBody"></div>
+        <div class="run-foot">
+          <button class="primary"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>Run preflight</button>
+          <div class="foot-note">Shows exact cost before anything is charged</div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="content view" id="view-motion" hidden>
+      <section class="work img-work">
+        <div class="img-head">
+          <div><div class="eyebrow">Create · renders on this machine</div><h1>Motion</h1></div>
+          <div class="seg" id="motMode"><button data-m="mo-templates">Templates</button><button class="on" data-m="mo-editor">Editor</button></div>
+        </div>
+        <div class="mode" id="m-mo-editor">
+          <div class="stage"><div class="bgv"></div><div class="title">Book 1: Krishna</div><div class="subt">A colouring journey · 48 pages</div><div class="l3"><i></i><div><b>GenRight Studio</b><br><span style="color:#6e6e73">Launch trailer</span></div></div><div class="tc">00:00:03:14</div></div>
+          <div class="transport"><button class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg></button><span>00:03.14 / 00:08.00</span><span style="margin-left:auto">30 fps · 1920×1080</span></div>
+          <div class="timeline">
+            <div class="ruler"><span>0s</span><span>2s</span><span>4s</span><span>6s</span><span>8s</span></div>
+            <div class="track"><b>Background</b><div class="lane"><div class="clip" style="left:0;width:100%;background:#5856d6">Gradient drift</div></div></div>
+            <div class="track"><b>Title</b><div class="lane"><div class="clip" style="left:4%;width:58%;background:#007aff">Book 1: Krishna</div></div></div>
+            <div class="track"><b>Subtitle</b><div class="lane"><div class="clip" style="left:10%;width:52%;background:#34aadc">A colouring journey</div></div></div>
+            <div class="track"><b>Lower third</b><div class="lane"><div class="clip" style="left:18%;width:44%;background:#af52de">GenRight Studio</div></div></div>
+            <div class="track"><b>Footage</b><div class="lane"><div class="clip" style="left:62%;width:38%;background:#ff9500">greenhouse-fox.mp4</div></div></div>
+            <div class="playhead"></div>
+          </div>
+        </div>
+        <div class="mode" id="m-mo-templates" hidden>
+          <div class="templates" id="mtemplates"></div>
+        </div>
+      </section>
+      <aside class="run">
+        <div class="run-head"><div class="eyebrow">Inspector</div><h3 style="margin:2px 0 0;font-size:15px;font-weight:600">Title</h3></div>
+        <div class="run-body">
+          <div class="group-box">
+            <div class="setting"><span>Text</span><input value="Book 1: Krishna"></div>
+            <div class="setting"><span>Animation</span><span style="color:var(--ink-2)">Rise · ease out</span></div>
+            <div class="setting"><span>In / out</span><span style="color:var(--ink-2)">0.12 s – 4.80 s</span></div>
+            <div class="setting"><span>Brand kit</span><span style="color:var(--ink-2)">KDP · Krishna</span></div>
+          </div>
+          <div class="recent"><h6>Renderer</h6></div>
+          <div class="group-box" style="margin-top:0">
+            <div class="setting"><span><i class="dot" style="background:var(--ok-dot)"></i>HyperFrames</span><span class="chip local">installed</span></div>
+            <div class="setting" style="opacity:.55"><span><i class="dot" style="background:var(--ink-3)"></i>Remotion</span><span class="chip">not set up</span></div>
+          </div>
+          <div class="recent"><h6>Render settings</h6></div>
+          <div class="group-box" style="margin-top:0">
+            <div class="setting"><span>Quality</span><div class="seg" data-local><button class="on">Draft</button><button>Standard</button><button>High</button></div></div>
+            <div class="setting"><span>Frame rate</span><span style="color:var(--ink-2)">30 fps</span></div>
+            <div class="setting"><span>Workers</span><span style="color:var(--ink-2)">2</span></div>
+            <div class="setting"><span>I've reviewed this draft</span><button class="switch" id="approve"></button></div>
+          </div>
+          <dl class="kv"><dt>Cost</dt><dd>Free · local</dd><dt>Est. render</dt><dd>~40 s</dd><dt>Destination</dt><dd>Content/motion</dd></dl>
+        </div>
+        <div class="run-foot">
+          <button class="primary" id="renderBtn" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>Render MP4</button>
+          <div class="foot-note" id="renderNote">Approve the draft to enable rendering</div>
+        </div>
+      </aside>
+    </div>
+
+  </div>
+</div>
+
+<div class="ob-back" id="ob">
+  <div class="ob">
+    <div class="ob-side">
+      <div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+      <div id="obSteps"></div>
+    </div>
+    <div class="ob-main">
+      <div class="ob-body" id="obBody"></div>
+      <div class="ob-foot"><button class="btn" id="obSkip">Set up later</button><span class="sp"></span><button class="btn" id="obPrev">Back</button><button class="btn pri" id="obNext">Continue</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="notes" id="notes"><button onclick="this.parentNode.remove()">✕</button>
+  <b>What changed in this view</b>
+  <ol>
+    <li>11 wrapping tabs → grouped sidebar (Workflows / Create / Library); "Advanced" variants nest under their parent.</li>
+    <li>Header metric tiles → sidebar health footer + top-bar status pills.</li>
+    <li>Locked params collapse to one chip row.</li>
+    <li>Numbered steps in the work area; sticky run panel owns preview, cost, and the primary action.</li>
+    <li>Single accent color, light + dark tokens, ⌘K jump.</li>
+  </ol>
+</div>
+
+<script>
+const art=(seed,color)=>{let r=seed*9301+49297;const rnd=()=>((r=(r*9301+49297)%233280)/233280);
+  const n=5+Math.floor(rnd()*5),petals=[];
+  const fills=color?['#f9a8d4','#fcd34d','#86efac','#93c5fd','#c4b5fd','#fdba74']:['none'];
+  for(let ring=0;ring<3;ring++){const rr=18+ring*14;const k=n+ring*2;
+    for(let i=0;i<k;i++){const a=i/k*Math.PI*2+ring*.3;const x=50+Math.cos(a)*rr,y=50+Math.sin(a)*rr;
+      petals.push(`<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${6+ring*1.5}" ry="${3.5+ring}" transform="rotate(${(a*180/Math.PI).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})" fill="${fills[(i+ring)%fills.length]}"/>`)}}
+  return `<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#fff"/><g stroke="#27272a" stroke-width=".8">${petals.join('')}<circle cx="50" cy="50" r="9" fill="${color?'#fde68a':'none'}"/><circle cx="50" cy="50" r="46" fill="none"/></g></svg>`};
+const pages=[['krishna-p04','Krishna'],['krishna-p07','Krishna'],['krishna-p11','Krishna'],['puck-p02','Puck'],['puck-p05','Puck'],['krishna-p15','Krishna'],['puck-p09','Puck'],['krishna-p19','Krishna']];
+const grid=document.getElementById('grid');
+pages.forEach(([name,book],i)=>{const b=document.createElement('button');b.className='tile';
+  b.innerHTML=`<span class="img">${art(i+3,false)}</span><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"/></svg></span><span class="meta"><b>${name}.png</b><span>${book} · 2 days ago</span></span>`;
+  b.onclick=()=>{grid.querySelectorAll('.tile').forEach(t=>t.classList.remove('on'));b.classList.add('on');
+    document.getElementById('preview').innerHTML=art(i+3,false);document.getElementById('runTitle').textContent=name+'.png';
+    document.getElementById('go').disabled=false;document.getElementById('step1').classList.add('done')};
+  grid.appendChild(b)});
+document.getElementById('strip').innerHTML=[21,22,23,24].map(s=>`<div>${art(s,true)}</div>`).join('');
+document.querySelectorAll('.seg').forEach(seg=>seg.querySelectorAll('button').forEach(btn=>btn.onclick=()=>{
+  seg.querySelectorAll('button').forEach(x=>x.classList.remove('on'));btn.classList.add('on');
+  if(seg.id==='mat'){document.getElementById('kvMat').textContent=btn.textContent;document.getElementById('step2').classList.add('done')}}));
+const NOTES={
+  kdp:['11 wrapping tabs → grouped sidebar (Workflows / Create / Library); "Advanced" variants nest under their parent.','Header metric tiles → sidebar health footer + top-bar status pills.','Locked params collapse to one chip row.','Numbered steps in the work area; sticky run panel owns preview, cost, and the primary action.','Single accent color, light + dark tokens, ⌘K jump.'],
+  image:['Image, Advanced router, and Local Image merge into one Image workspace.','Local models are providers next to NB2 / fal / WaveSpeed / Evolink — tagged LOCAL, free, with install state inline.','Workflows · Chat · Advanced are modes, and every mode works with every provider.','The run panel changes per provider: runtime + VRAM for local, credits + cost check for cloud.','Each job in a chat records its provider, so you can retry a cancelled cloud job on local.'],
+  video:['Video, Video Advanced, and Avatar merge into one Video workspace: Workflows · Generate · Avatar.','Generate uses the same model-card picker as Image (models from the current catalog).','Start/end frames are first-class drop slots; the cost check stays in the run panel.','Avatar (HeyGen) is a mode: script, avatar, voice, captions.'],
+  motion:['HyperFrames becomes Motion: its own workspace for deterministic, re-renderable graphics.','Preview stage + timeline tracks replace the raw project-dir form.','Renderer is an engine choice: HyperFrames installed, Remotion slot ready if you add it later.','Local and free; the operator-approval step is a toggle that unlocks Render.'],
+  apple:['Apple style without glass: opaque sidebar like macOS with Reduce Transparency on.','SF Pro through system-ui, 13px body, bold large titles, no all-caps labels.','System blue accent, hairline separators, grouped inset boxes, segmented controls, switches.','Accent-tinted sidebar icons, gray selection fill, unified toolbar with window controls.']};
+const notesEl=document.getElementById('notes');
+const renderNotes=v=>{const ol=notesEl.querySelector('ol');if(ol)ol.innerHTML=(NOTES[v]||NOTES.kdp).map(n=>`<li>${n}</li>`).join('')};
+const crumbPrefix={kdp:'Workflows / ',image:'Create / '};
+document.querySelectorAll('#nav .item').forEach(it=>it.onclick=()=>{document.querySelectorAll('#nav .item').forEach(x=>x.classList.remove('on'));it.classList.add('on');
+  document.getElementById('crumb').textContent=it.dataset.t;
+  const v=it.dataset.v;if(!v)return;
+  document.querySelectorAll('.view').forEach(x=>x.hidden=x.id!=='view-'+v);
+  document.getElementById('topPills').hidden=v!=='kdp';renderNotes(v)});
+
+/* Image view */
+const scene=(seed)=>{let r=seed*7919+13;const rnd=()=>((r=(r*9301+49297)%233280)/233280);
+  const skies=[['#0f172a','#134e4a','#22d3ee'],['#1e1b4b','#6d28d9','#f0abfc'],['#082f49','#0e7490','#a7f3d0'],['#3b0764','#be185d','#fdba74']];
+  const s=skies[seed%skies.length];const h1=60+rnd()*10,h2=70+rnd()*8;
+  return `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g${seed}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${s[0]}"/><stop offset=".6" stop-color="${s[1]}"/></linearGradient></defs>
+  <rect width="100" height="100" fill="url(#g${seed})"/>
+  <path d="M0 ${30+rnd()*10} C30 ${15+rnd()*10},60 ${40+rnd()*10},100 ${20+rnd()*10}" stroke="${s[2]}" stroke-width="5" fill="none" opacity=".45"/>
+  <path d="M0 ${h1} L25 ${h1-12} L45 ${h1-4} L70 ${h1-18} L100 ${h1-6} V100 H0z" fill="#1e293b" opacity=".85"/>
+  <path d="M0 ${h2} Q50 ${h2-6} 100 ${h2+2} V100 H0z" fill="#e2e8f0"/>
+  <g transform="translate(${38+rnd()*14} ${h2-14})"><path d="M0 12 V4 L8 -2 L16 4 V12z" fill="#fde68a" stroke="#fff" stroke-width=".6" opacity=".95"/></g></svg>`};
+document.getElementById('outA').innerHTML=[1,2].map(s=>`<div class="out">${scene(s)}<div class="acts"><span>Save to Gallery</span><span>Variations</span><span>Use as ref</span></div></div>`).join('');
+const PROVIDERS=[
+  {id:'qwen',name:'Qwen Image 2.1',sub:'base · Q6 · ready',kind:'local',cost:'Free',vram:'14.2 / 24 GB',state:'Warm · loaded 4 min ago'},
+  {id:'noct',name:'Noct-Q v4',sub:'int8 · not installed',kind:'install',cost:'Free',size:'11.8 GB'},
+  {id:'nb2',name:'NB2',sub:'Google · 2K max',kind:'paid',cost:'4 credits',bal:'unknown',warn:true},
+  {id:'fal',name:'fal · Flux 1.1',sub:'fast · 4K max',kind:'paid',cost:'2 credits',bal:'1,840'},
+  {id:'ws',name:'WaveSpeed',sub:'Seedream 4',kind:'paid',cost:'3 credits',bal:'620'},
+  {id:'evo',name:'Evolink',sub:'GPT Image',kind:'paid',cost:'5 credits',bal:'210'}];
+const provEl=document.getElementById('providers');
+const pickProv=p=>{provEl.querySelectorAll('.prov').forEach(x=>x.classList.toggle('on',x.dataset.id===p.id));
+  document.getElementById('pvName').textContent=p.name;
+  const body=document.getElementById('pvBody'),go=document.getElementById('pvGo'),note=document.getElementById('pvNote'),comp=document.getElementById('compProv');
+  if(p.kind==='local'){
+    body.innerHTML=`<span class="chip local">Runs on this machine</span><div class="rt"><h6>Runtime <span style="color:var(--ok)">● ready</span></h6><div class="row"><span>State</span><b>${p.state}</b></div><div class="row"><span>GPU memory</span><b>${p.vram}</b></div><div class="meter"><i style="width:59%"></i></div><div class="row"><span>Typical job</span><b>~28 s @ 1024²</b></div><div class="row"><span>Queue</span><b>1 running</b></div></div>
+    <dl class="kv"><dt>Cost</dt><dd>Free</dd><dt>Approval</dt><dd>Eyes only (metadata sidecar)</dd><dt>Destination</dt><dd>Content/local-image</dd></dl>
+    <div class="recent"><h6>Recent from this provider</h6><div class="strip">${[3,4,5,6].map(s=>`<div>${scene(s)}</div>`).join('')}</div></div>`;
+    go.disabled=false;go.lastChild.textContent='Generate';note.textContent='Runs on this machine · no credits';comp.className='chip local';comp.textContent=p.name.replace(' Image','')+' · local · free';
+  }else if(p.kind==='install'){
+    body.innerHTML=`<div class="preview" style="aspect-ratio:auto;padding:28px 16px">Not installed<br><b style="color:var(--ink);font-size:14px">${p.size} download</b><br>Weights are pinned to a reviewed revision.</div><dl class="kv"><dt>Cost</dt><dd>Free after install</dd><dt>Disk free</dt><dd>212 GB</dd></dl>`;
+    go.disabled=false;go.lastChild.textContent='Install model';note.textContent='Download runs in the background · you can keep working';comp.className='chip';comp.textContent=p.name+' · install first';
+  }else{
+    body.innerHTML=`<span class="chip">Cloud provider</span><div class="cost"><div><small>Estimated cost · 2 images</small><b>${p.cost.replace(/\d+/,m=>m*2)}</b></div><span class="pill ${p.warn?'warn':''}">balance ${p.bal}</span></div>
+    <dl class="kv"><dt>Preflight</dt><dd>Cost + guard check</dd><dt>Approval</dt><dd>Eyes + auto-jury</dd><dt>Destination</dt><dd>Content/studio</dd></dl>
+    <div class="recent"><h6>Recent from this provider</h6><div class="strip">${[7,8,9,10].map(s=>`<div>${scene(s)}</div>`).join('')}</div></div>`;
+    go.disabled=false;go.lastChild.textContent='Run preflight';note.textContent='Shows exact cost before anything is charged';comp.className='chip';comp.textContent=p.name+' · '+p.cost;
+  }};
+PROVIDERS.forEach(p=>{const b=document.createElement('button');b.className='prov'+(p.kind==='install'?' dim':'');b.dataset.id=p.id;
+  const badge=p.kind==='paid'?(p.warn?'<span class="badge warn">credits?</span>':'<span class="badge paid">cloud</span>'):p.kind==='install'?'<span class="badge local">get</span>':'<span class="badge local">local</span>';
+  b.innerHTML=`${badge}<b>${p.kind==='local'?'<i class="dot" style="background:var(--ok);margin:0"></i>':''}${p.name}</b><small>${p.sub}</small><small style="color:var(--ink-2)">${p.cost}${p.kind==='paid'?' / image':''}</small>`;
+  b.onclick=()=>pickProv(p);provEl.appendChild(b)});
+pickProv(PROVIDERS[0]);
+['imgMode','vidMode','motMode'].forEach(id=>{const seg=document.getElementById(id);const view=seg.closest('.view');seg.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{view.querySelectorAll('.mode').forEach(m=>m.hidden=m.id!=='m-'+btn.dataset.m)}))});
+document.getElementById('templates').innerHTML=[['Product on seamless','Hero shot, soft shadow',11],['Book cover draft','KDP 6×9 with title safe area',12],['Social square set','4 variations, brand palette',13],['Background plate','Wide scene for video comps',14],['Character sheet','Front / side / back',15],['Upscale + clean','Fix artifacts, 2× upscale',16]]
+  .map(([t,d,s])=>`<button class="tpl"><span class="img">${scene(s)}</span><div><b>${t}</b><small>${d}</small></div></button>`).join('');
+const root=document.documentElement;
+try{if(matchMedia('(prefers-color-scheme: dark)').matches)root.dataset.theme='dark'}catch(e){}
+document.getElementById('theme').onclick=()=>{root.dataset.theme=root.dataset.theme==='dark'?'light':'dark'};
+
+/* Video */
+const VMODELS=[
+  {id:'sd2f',name:'Seedance 2 Fast',sub:'WaveSpeed · start + end frame',cost:'6 credits',bal:'620',per:'/ 5 s'},
+  {id:'sd2s',name:'Seedance 2 Std',sub:'WaveSpeed · start + end frame',cost:'14 credits',bal:'620',per:'/ 5 s'},
+  {id:'veo',name:'Veo 3 FLF',sub:'fal · start + end frame',cost:'40 credits',bal:'1,840',per:'/ 5 s'},
+  {id:'wan',name:'Wan HD',sub:'WaveSpeed · motion control',cost:'9 credits',bal:'620',per:'/ 5 s'}];
+const vEl=document.getElementById('vproviders');
+const pickV=m=>{vEl.querySelectorAll('.prov').forEach(x=>x.classList.toggle('on',x.dataset.id===m.id));document.getElementById('vpvName').textContent=m.name;
+  document.getElementById('vpvBody').innerHTML=`<div class="cost"><div><small>Estimated cost · 5 s clip</small><b>${m.cost}</b></div><span class="pill">balance ${m.bal}</span></div>
+  <dl class="kv"><dt>Mode</dt><dd>${m.sub.split(' · ')[1]}</dd><dt>Preflight</dt><dd>Cost + guard check</dd><dt>Approval</dt><dd>Eyes + auto-jury</dd><dt>Destination</dt><dd>Content/video</dd></dl>
+  <div class="recent"><h6>Recent clips</h6><div class="strip">${[17,18,19,20].map(s=>`<div>${scene(s)}</div>`).join('')}</div></div>`};
+VMODELS.forEach((m,i)=>{const b=document.createElement('button');b.className='prov';b.dataset.id=m.id;
+  b.innerHTML=`${i===0?'<span class="badge local">cheap draft</span>':'<span class="badge paid">cloud</span>'}<b>${m.name}</b><small>${m.sub}</small><small style="color:var(--ink-2)">${m.cost} ${m.per}</small>`;
+  b.onclick=()=>pickV(m);vEl.appendChild(b)});
+pickV(VMODELS[0]);
+document.getElementById('slotA').insertAdjacentHTML('beforeend',scene(2));
+document.getElementById('avatars').innerHTML=[['Maya','#f4c7a1,#c98b6b'],['Theo','#e0b48f,#8d5a3b'],['Ana','#f7d6c4,#d9a38a'],['Custom…','#e5e5ea,#c7c7cc']].map(([n,g],i)=>`<button class="av${i===0?' on':''}"><i style="background:linear-gradient(160deg,${g})"></i>${n}</button>`).join('');
+document.querySelectorAll('#avatars .av').forEach(a=>a.onclick=()=>{document.querySelectorAll('#avatars .av').forEach(x=>x.classList.remove('on'));a.classList.add('on')});
+document.getElementById('vtemplates').innerHTML=[['Image to clip','Animate a Gallery image',21],['First → last frame','Morph between two stills',22],['Product orbit','360° turn from one shot',23],['Storyboard','Shot list to clips',24]]
+  .map(([t,d,s])=>`<button class="tpl"><span class="img">${scene(s)}</span><div><b>${t}</b><small>${d}</small></div></button>`).join('');
+
+/* Motion */
+const mt=(c1,c2,label)=>`<svg viewBox="0 0 160 90"><defs><linearGradient id="m${c1.slice(1)}" x1="0" x2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="160" height="90" fill="url(#m${c1.slice(1)})"/><text x="14" y="50" fill="#fff" font-family="-apple-system,system-ui" font-weight="700" font-size="15">${label}</text><rect x="14" y="58" width="60" height="4" rx="2" fill="rgba(255,255,255,.6)"/></svg>`;
+document.getElementById('mtemplates').innerHTML=[['Title card','Big type, rise in','#1d4ed8','#7c3aed','Title'],['Lower third','Name + role, brand kit','#0f766e','#22d3ee','Lower third'],['Kinetic captions','Word-by-word from script','#be185d','#f97316','Captions'],['Data callout','Animated number + chart','#065f46','#84cc16','+248%'],['Book trailer','KDP cover + page flips','#7c2d12','#f59e0b','Trailer'],['UI demo','Screen recording + zooms','#111827','#4b5563','UI demo']]
+  .map(([t,d,a,b,l])=>`<button class="tpl"><span class="img">${mt(a,b,l)}</span><div><b>${t}</b><small>${d}</small></div></button>`).join('');
+const ap=document.getElementById('approve');
+ap.onclick=()=>{ap.classList.toggle('on');const on=ap.classList.contains('on');document.getElementById('renderBtn').disabled=!on;document.getElementById('renderNote').textContent=on?'HyperFrames · draft quality · ~40 s':'Approve the draft to enable rendering'};
+renderNotes('apple');
+/* Onboarding */
+const MACH={
+  mac:{name:'Mac mini',spec:[['Chip','Apple M6 · 12-core GPU'],['Memory','24 GB unified (≈17 GB usable by GPU)'],['Backends','Metal 4 · CoreML / Neural Engine'],['Disk','200 GB free']]},
+  xps:{name:'XPS 15 9530',spec:[['GPU','NVIDIA RTX 4070 Laptop · 8 GB'],['Memory','64 GB RAM · i9-13900H'],['Backends','CUDA 12.8 · Vulkan 1.4 · DirectML'],['Disk','791 GB free']]}};
+let mach='mac';
+const FOUND={
+  mac:[['Parakeet TDT v3','Speech-to-text · from HeardRight','~/Library/Application Support/HeardRight/models/asr/parakeet-tdt-v3','Hash verified · reuse in place'],
+       ['Parakeet (ScrapeRight copy)','Same model as HeardRight','…/ScrapeRight/models/asr/parakeet-tdt-v3','Same hash · skipped']],
+  xps:[['Parakeet TDT v3 (DirectML)','Speech-to-text · from HeardRight','%APPDATA%\\HeardRight\\models\\asr\\parakeet_tdt_v3_dynamic_b64_fp16storage_20260720','Hash verified · reuse in place'],
+       ['Parakeet (ScrapeRight copy)','Same model as HeardRight','%APPDATA%\\ScrapeRight\\models\\asr\\parakeet_tdt_v3_dynamic_b64_fp16storage_20260720','Same hash · skipped']]};
+const KEYS=[['OpenAI','GPT Image 2 · Sora','sk-…'],['Google AI','Nano Banana 2 · Veo 3.1 · Gemini 3.8 TTS','AIza…'],['fal','FLUX.2 · Kling v3 · Seedance · MiniMax H3 · OmniHuman','fal_…'],['ElevenLabs','Eleven v4 · Scribe v2 · Music · SFX','xi_…'],['HeyGen','Avatar twins · lip-sync','hg_…'],['WaveSpeed','Seedance · Wan','ws_…'],['Higgsfield','50+ models','hf_…']];
+// fit: well=measured runs well, cand=candidate (not measured), slow, api=won't fit → API, have=already installed
+const MODELS=[
+ ['Speech-to-text',[['parakeet','Parakeet TDT v3','Word timings for editing & captions','0.6 GB',{mac:'have',xps:'have'},'Measured · already installed']]],
+ ['Image',[['zimg','Z-Image-Turbo Q8','Fast few-step images','7.1 GB',{mac:'cand',xps:'cand'},'Candidate · not measured yet'],
+           ['qwen','Qwen-Image-2.1 Q6','Best open image + edit model','12.9 GB',{mac:'slow',xps:'cand'},{mac:'Measured · 218 s at 512² (slow)',xps:'Candidate · needs CUDA build'}]]],
+ ['Voice',[['qts','Qwen3-TTS 0.6B','Clone + design · multilingual','1.8 GB',{mac:'cand',xps:'have'},{mac:'Candidate · Metal build pending',xps:'Measured · already installed'}],
+           ['fish','Fish Audio S2 Pro q6','Expressive cloning · 80+ languages','5.2 GB',{mac:'cand',xps:'cand'},'Candidate · research licence'],
+           ['pocket','Kyutai Pocket TTS','Instant drafts on CPU (EN/FR)','0.2 GB',{mac:'cand',xps:'cand'},'Candidate · CPU']]],
+ ['Video',[['wan5','Wan 2.2 TI2V-5B','Short local clips','10.4 GB',{mac:'slow',xps:'slow'},'Candidate · expect minutes per clip'],
+           ['ltx25','LTX-2.5','Video + audio, 4K','27 GB',{mac:'api',xps:'api'},'Won’t fit → uses API (Veo, Kling, Seedance)']]],
+ ['Avatar',[['avatar','Local avatar','Not offered yet','—',{mac:'api',xps:'api'},'Uses API (HeyGen, Tavus, OmniHuman)']]]];
+const FITLBL={well:'Runs well',cand:'Candidate',slow:'Slow',api:'Uses API',have:'Installed'};
+const sel=new Set(['zimg','qts','pocket']);
+const STEPS=['Welcome','This computer','Found on this computer','API keys','Local models','Download'];
+let step=0;
+const machToggle=()=>`<div class="machine">Previewing as <div class="seg" id="machSeg"><button data-m="mac" class="${mach==='mac'?'on':''}">Mac mini</button><button data-m="xps" class="${mach==='xps'?'on':''}">XPS 15</button></div> (mockup only — the app detects this)</div>`;
+const obPages=[
+ ()=>`<h2>Welcome to GenRight</h2><p class="sub">One place to generate images, video and voice — with cloud APIs, local models, or both — and edit it all into finished video.</p>
+   <div class="group-box"><div class="setting"><span>Library folder</span><span style="color:var(--ink-2)">~/Movies/GenRight Library <button class="link-btn">Change…</button></span></div>
+   <div class="setting"><span>One-time import: GenRight gallery & models, VoiceRight voices & model, CutRight projects</span><button class="switch on"></button></div></div>
+   <p class="sub" style="margin-top:14px;font-size:12px">Nothing is uploaded during setup. You can skip any step and come back from Library → Models & Keys.</p>`,
+ ()=>`${machToggle()}<h2>Checking this computer</h2><p class="sub">Used to decide which models run locally and which go to an API.</p>
+   <div class="hw"><div class="group-box">${MACH[mach].spec.map(([k,v])=>`<div class="setting"><span>${k}</span><span style="color:var(--ink-2)">${v}</span></div>`).join('')}</div>
+   <div class="group-box"><div class="setting"><span>Quick benchmark</span><span class="chip local">Done · 6 s</span></div><div class="setting"><span>Image (1024²)</span><span style="color:var(--ink-2)">${mach==='xps'?'GPU path ready':'Metal ready'}</span></div><div class="setting"><span>Video</span><span style="color:var(--ink-2)">Small models only</span></div><div class="setting"><span>Speech & voice</span><span style="color:var(--ink-2)">Runs well</span></div></div></div>`,
+ ()=>`${machToggle()}<h2>Already on this computer</h2><p class="sub">GenRight checked HeardRight and ScrapeRight's model folders, the same way ScrapeRight does, and verified each file's hash. These are reused in place — no download.</p>
+   <div class="group-box">${FOUND[mach].map(([n,d,p,s])=>`<div class="found"><span class="chip ${s.includes('skipped')?'':'local'}">${s.includes('skipped')?'Skip':'Reuse'}</span><div><b>${n}</b><small>${d}</small><small style="font-family:ui-monospace,monospace">${p}</small></div><div class="r"><small>${s}</small></div></div>`).join('')}</div>`,
+ ()=>`<h2>Connect API providers</h2><p class="sub">Keys are stored in your ${mach==='xps'?'Windows Credential Manager':'macOS Keychain'}, never in project files. Add only what you use — you can skip all of them and work locally.</p>
+   <div class="group-box">${KEYS.map(([n,d,ph],i)=>`<div class="key"><div><b style="font-weight:500">${n}</b><small>${d}</small></div><input placeholder="${ph}" data-k="${i}"><span class="st" id="kst${i}"><button class="btn" data-test="${i}" style="height:24px">Test</button></span></div>`).join('')}</div>`,
+ ()=>`${machToggle()}<h2>Choose local models</h2><p class="sub">Ratings come from this computer's check. “Candidate” means it should fit but hasn't been measured here yet; GenRight measures it on first use. Anything that won't fit uses an API instead — you'll always see which.</p>
+   ${MODELS.map(([cap,rows])=>`<div class="capttl">${cap}</div><div class="group-box" style="margin-top:0">${rows.map(([id,n,d,sz,fit,note])=>{const f=fit[mach],nt=typeof note==='string'?note:note[mach];const dis=f==='api'||f==='have';return `<div class="mrow"><input type="checkbox" data-m="${id}" ${sel.has(id)&&!dis?'checked':''} ${dis?'disabled':''} ${f==='have'?'checked':''}><div><b style="font-weight:500">${n}</b><small>${d} · ${nt}</small></div><span class="sz">${sz}</span><span class="fit ${f}">${FITLBL[f]}</span></div>`}).join('')}</div>`).join('')}
+   <p class="sub" style="margin-top:12px;font-size:12px" id="tot"></p>`,
+ ()=>`<h2>Downloading</h2><p class="sub">From each model's publisher, checked against its hash, licence shown before download. You can start working now — downloads continue in the background.</p>
+   <div class="group-box">${[...sel].map((id,i)=>{const m=MODELS.flatMap(x=>x[1]).find(r=>r[0]===id);if(!m)return '';return `<div class="dl"><div style="flex:1"><b style="font-weight:500">${m[1]}</b><small style="display:block;color:var(--ink-3)">${m[3]} · licence accepted</small></div><div class="bar"><i style="width:${[64,22,100][i%3]}%"></i></div><small style="width:70px;text-align:right;color:var(--ink-3)">${[64,22,100][i%3]===100?'Verified':[64,22][i%3]+'%'}</small></div>`}).join('')}</div>`];
+function renderOb(){
+  document.getElementById('obSteps').innerHTML=STEPS.map((s,i)=>`<button class="ob-step ${i===step?'on':''} ${i<step?'done':''}" data-s="${i}"><i>${i<step?'✓':i+1}</i>${s}</button>`).join('');
+  document.getElementById('obBody').innerHTML=obPages[step]();
+  document.getElementById('obPrev').style.visibility=step?'visible':'hidden';
+  document.getElementById('obNext').textContent=step===STEPS.length-1?'Start using GenRight':step===4?`Download ${sel.size} model${sel.size===1?'':'s'}`:'Continue';
+  document.querySelectorAll('.ob-step').forEach(b=>b.onclick=()=>{step=+b.dataset.s;renderOb()});
+  document.querySelectorAll('#machSeg button').forEach(b=>b.onclick=()=>{mach=b.dataset.m;renderOb()});
+  document.querySelectorAll('[data-test]').forEach(b=>b.onclick=()=>{const i=b.dataset.test,v=document.querySelector(`[data-k="${i}"]`).value.trim();document.getElementById('kst'+i).innerHTML=v?'<span class="chip local">✓ Connected</span>':'<span class="chip" style="color:var(--warn)">Paste a key first</span>'});
+  document.querySelectorAll('.mrow input[data-m]').forEach(c=>c.onchange=()=>{c.checked?sel.add(c.dataset.m):sel.delete(c.dataset.m);renderOb()});
+  const tot=document.getElementById('tot');if(tot){const gb=[...sel].map(id=>parseFloat((MODELS.flatMap(x=>x[1]).find(r=>r[0]===id)||[])[3])||0).reduce((a,b)=>a+b,0);tot.textContent=`Selected: ${gb.toFixed(1)} GB to download · ${MACH[mach].spec[3][1]}`}
+}
+document.getElementById('obNext').onclick=()=>{if(step<STEPS.length-1){step++;renderOb()}else document.getElementById('ob').hidden=true};
+document.getElementById('obPrev').onclick=()=>{if(step>0){step--;renderOb()}};
+document.getElementById('obSkip').onclick=()=>document.getElementById('ob').hidden=true;
+document.getElementById('openSetup').onclick=()=>{document.getElementById('ob').hidden=false;step=4;renderOb()};
+renderOb();
+
+</script>
+</body>
+</html>
